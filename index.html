@@ -7,14 +7,7 @@
   <title>GIPHY API</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/css/bootstrap.min.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style type="text/css">
-    button,
-    div,
-    form,
-    input {
-      margin: 10px;
-    }
-  </style>
+
 </head>
 
 <body>
@@ -30,81 +23,105 @@
       <input id="add-food" type="submit" value="Find a Food Type Here">
     </form>
   </div>
+  
+  <div id="myButtons"></div>
 
-  <div id="gifs">
-    <img id="myGiphy">
+  <div id="container">
+    <span>
+      <div id="gifs"></div>
+    </span>
   </div>
+
+
+
 
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
   <script>
 
-    var foods = ["italian", "french", "japanese"];
+    $(document).ready(function () {
 
-    function displayFoodGif() {
+      var foods = ["Italian Food", "French Food", "Japanese Food"];
 
-      var food = $(this).attr("data-name");
-      $.ajax({
-        url: "http://api.giphy.com/v1/gifs/search",
-        method: "GET",
-        data: {
-          api_key: "2b131N2NP9njCpTeK1iRUECGenRpiMZa",
-          q: "food"
+      function showFood() {
+
+        var x = $(this).data("search");
+        console.log(x);
+
+        var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + x + "&api_key=2b131N2NP9njCpTeK1iRUECGenRpiMZa";
+
+        console.log(queryURL);
+
+        $.ajax({
+          url: queryURL,
+          method: "GET"
+        }).done(function (response) {
+          var results = response.data;
+          console.log(results);
+          for (var i = 0; i < results.length; i++) {
+
+            var showDiv = $("<div class='col-md-4'>");
+
+            var rating = results[i].rating;
+            var defaultAnimatedSrc = results[i].images.fixed_height.url;
+            var staticSrc = results[i].images.fixed_height_still.url;
+            var showImage = $("<img>");
+            var p = $("<p>").text("Rating: " + rating);
+
+            showImage.attr("src", staticSrc);
+            showImage.addClass("foodGiphy");
+            showImage.attr("data-state", "still");
+            showImage.attr("data-still", staticSrc);
+            showImage.attr("data-animate", defaultAnimatedSrc);
+            showDiv.append(p);
+            showDiv.append(showImage);
+            $("#gifs").prepend(showDiv);
+
+          }
+        });
+      }
+
+
+      $("#addShow").on("click", function (event) {
+        event.preventDefault();
+        var newFood = $("#food-input").val().trim();
+        topics.push(newFood);
+        console.log(foods);
+        $("#food-input").val('');
+        displayButtons();
+      });
+
+
+      function displayButtons() {
+        $("#myButtons").empty();
+        for (var i = 0; i < foods.length; i++) {
+          var a = $('<button class="btn btn-primary">');
+          a.attr("id", "show");
+          a.attr("data-search", foods[i]);
+          a.text(foods[i]);
+          $("#myButtons").append(a);
         }
-      }).then(function (response) {
-        $("#foods-view").text(JSON.stringify(response));
-      });
-    }
-
-    // Function for displaying food data
-    function renderButtons() {
-
-      // Deleting the foods buttons prior to adding new food buttons
-      $("#foods-view").empty();
-
-      // Looping through the array of foods
-      for (var i = 0; i < foods.length; i++) {
-
-        // adding button with class/attr/text. then appending
-        var a = $("<button>");
-
-        a.addClass("food");
-        a.attr("data-name", foods[i]);
-        a.text(foods[i]);
-        $("#foods-view").append(a);
-      
-
-            // this might be right?
-        $("#data-name").on("click", function(response) {
-        $("#myGiphy").attr("src", response.data[1].images["downsized_medium"].url);
-      });
-      
-      
-      
-      };
-    };
-
-    $("#add-food").on("click", function (event) {
-      // event.preventDefault() prevents the form from trying to submit itself.
-      // We're using a form so that the user can hit enter instead of clicking the button if they want
-      event.preventDefault();
+      }
 
 
+      displayButtons();
 
-      var food = $("#food-input").val().trim();
+      $(document).on("click", "#show", showFood);
 
-      foods.push(food);
+      $(document).on("click", ".foodGiphy", pausePlayGifs);
 
-      // calling renderButtons which handles the processing of our movie array
-      renderButtons();
+      function pausePlayGifs() {
+        var state = $(this).attr("data-state");
+        if (state === "still") {
+          $(this).attr("src", $(this).attr("data-animate"));
+          $(this).attr("data-state", "animate");
+        } else {
+          $(this).attr("src", $(this).attr("data-still"));
+          $(this).attr("data-state", "still");
+        }
+      }
+
     });
-
-
-
-
-    // Calling the renderButtons function at least once to display the initial list of movies
-    renderButtons();
-
 
   </script>
 
